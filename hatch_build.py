@@ -1,24 +1,15 @@
-# noqa: INP001
-import os
+"""Package the same Open WebUI frontend; no model/execution resource downloads."""
+
 import shutil
 import subprocess
-from sys import stderr
-
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
 
 class CustomBuildHook(BuildHookInterface):
     def initialize(self, version, build_data):
         super().initialize(version, build_data)
-        stderr.write('>>> Building Open Webui frontend\n')
         npm = shutil.which('npm')
-        if npm is None:
-            raise RuntimeError('NodeJS `npm` is required for building Open Webui but it was not found')
-        stderr.write('### npm install\n')
-        os.environ.setdefault('ONNXRUNTIME_NODE_INSTALL_CUDA', 'skip')
-        subprocess.run([npm, 'install', '--force'], check=True)  # noqa: S603
-        stderr.write('\n### npm run build\n')
-        node_options = os.environ.get('NODE_OPTIONS', '')
-        if '--max-old-space-size' not in node_options:
-            os.environ['NODE_OPTIONS'] = f'{node_options} --max-old-space-size=8192'.strip()
-        subprocess.run([npm, 'run', 'build'], check=True)  # noqa: S603
+        if not npm:
+            raise RuntimeError('Node 22/npm is required to build the Open WebUI frontend')
+        subprocess.run([npm, 'ci'], check=True)
+        subprocess.run([npm, 'run', 'build'], check=True)

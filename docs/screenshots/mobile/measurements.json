@@ -1,0 +1,314 @@
+[
+  {
+    "width": 360,
+    "locale": "en-US",
+    "scheme": "light",
+    "root": "rgb(255, 255, 255)",
+    "body": "rgb(255, 255, 255)",
+    "shell": "rgb(255, 255, 255)",
+    "theme": "#ffffff",
+    "composer": 96,
+    "font": 27.04,
+    "align": "center",
+    "inputFont": 16,
+    "centerDelta": 0,
+    "bodyScroll": 0,
+    "buttons": [
+      {
+        "w": 44,
+        "h": 44
+      },
+      {
+        "w": 82.59375,
+        "h": 44
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "locale": "en-US",
+    "scheme": "dark",
+    "root": "rgb(23, 23, 23)",
+    "body": "rgb(23, 23, 23)",
+    "shell": "rgb(23, 23, 23)",
+    "theme": "#171717",
+    "composer": 96,
+    "font": 27.04,
+    "align": "center",
+    "inputFont": 16,
+    "centerDelta": 0,
+    "bodyScroll": 0,
+    "buttons": [
+      {
+        "w": 44,
+        "h": 44
+      },
+      {
+        "w": 82.59375,
+        "h": 44
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "locale": "zh-CN",
+    "scheme": "light",
+    "root": "rgb(255, 255, 255)",
+    "body": "rgb(255, 255, 255)",
+    "shell": "rgb(255, 255, 255)",
+    "theme": "#ffffff",
+    "composer": 96,
+    "font": 27.04,
+    "align": "center",
+    "inputFont": 16,
+    "centerDelta": 0,
+    "bodyScroll": 0,
+    "buttons": [
+      {
+        "w": 44,
+        "h": 44
+      },
+      {
+        "w": 76.421875,
+        "h": 44
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "width": 360,
+    "locale": "zh-CN",
+    "scheme": "dark",
+    "root": "rgb(23, 23, 23)",
+    "body": "rgb(23, 23, 23)",
+    "shell": "rgb(23, 23, 23)",
+    "theme": "#171717",
+    "composer": 96,
+    "font": 27.04,
+    "align": "center",
+    "inputFont": 16,
+    "centerDelta": 0,
+    "bodyScroll": 0,
+    "buttons": [
+      {
+        "w": 44,
+        "h": 44
+      },
+      {
+        "w": 76.421875,
+        "h": 44
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "locale": "en-US",
+    "scheme": "light",
+    "root": "rgb(255, 255, 255)",
+    "body": "rgb(255, 255, 255)",
+    "shell": "rgb(255, 255, 255)",
+    "theme": "#ffffff",
+    "composer": 96,
+    "font": 27.76,
+    "align": "center",
+    "inputFont": 16,
+    "centerDelta": 0,
+    "bodyScroll": 0,
+    "buttons": [
+      {
+        "w": 44,
+        "h": 44
+      },
+      {
+        "w": 82.59375,
+        "h": 44
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "locale": "en-US",
+    "scheme": "dark",
+    "root": "rgb(23, 23, 23)",
+    "body": "rgb(23, 23, 23)",
+    "shell": "rgb(23, 23, 23)",
+    "theme": "#171717",
+    "composer": 96,
+    "font": 27.76,
+    "align": "center",
+    "inputFont": 16,
+    "centerDelta": 0,
+    "bodyScroll": 0,
+    "buttons": [
+      {
+        "w": 44,
+        "h": 44
+      },
+      {
+        "w": 82.59375,
+        "h": 44
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "locale": "zh-CN",
+    "scheme": "light",
+    "root": "rgb(255, 255, 255)",
+    "body": "rgb(255, 255, 255)",
+    "shell": "rgb(255, 255, 255)",
+    "theme": "#ffffff",
+    "composer": 96,
+    "font": 27.76,
+    "align": "center",
+    "inputFont": 16,
+    "centerDelta": 0,
+    "bodyScroll": 0,
+    "buttons": [
+      {
+        "w": 44,
+        "h": 44
+      },
+      {
+        "w": 76.421875,
+        "h": 44
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "width": 390,
+    "locale": "zh-CN",
+    "scheme": "dark",
+    "root": "rgb(23, 23, 23)",
+    "body": "rgb(23, 23, 23)",
+    "shell": "rgb(23, 23, 23)",
+    "theme": "#171717",
+    "composer": 96,
+    "font": 27.76,
+    "align": "center",
+    "inputFont": 16,
+    "centerDelta": 0,
+    "bodyScroll": 0,
+    "buttons": [
+      {
+        "w": 44,
+        "h": 44
+      },
+      {
+        "w": 76.421875,
+        "h": 44
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "width": 430,
+    "locale": "en-US",
+    "scheme": "light",
+    "root": "rgb(255, 255, 255)",
+    "body": "rgb(255, 255, 255)",
+    "shell": "rgb(255, 255, 255)",
+    "theme": "#ffffff",
+    "composer": 96,
+    "font": 28.72,
+    "align": "center",
+    "inputFont": 16,
+    "centerDelta": 0,
+    "bodyScroll": 0,
+    "buttons": [
+      {
+        "w": 44,
+        "h": 44
+      },
+      {
+        "w": 82.59375,
+        "h": 44
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "width": 430,
+    "locale": "en-US",
+    "scheme": "dark",
+    "root": "rgb(23, 23, 23)",
+    "body": "rgb(23, 23, 23)",
+    "shell": "rgb(23, 23, 23)",
+    "theme": "#171717",
+    "composer": 96,
+    "font": 28.72,
+    "align": "center",
+    "inputFont": 16,
+    "centerDelta": 0,
+    "bodyScroll": 0,
+    "buttons": [
+      {
+        "w": 44,
+        "h": 44
+      },
+      {
+        "w": 82.59375,
+        "h": 44
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "width": 430,
+    "locale": "zh-CN",
+    "scheme": "light",
+    "root": "rgb(255, 255, 255)",
+    "body": "rgb(255, 255, 255)",
+    "shell": "rgb(255, 255, 255)",
+    "theme": "#ffffff",
+    "composer": 96,
+    "font": 28.72,
+    "align": "center",
+    "inputFont": 16,
+    "centerDelta": 0.0078125,
+    "bodyScroll": 0,
+    "buttons": [
+      {
+        "w": 44,
+        "h": 44
+      },
+      {
+        "w": 76.421875,
+        "h": 44
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "width": 430,
+    "locale": "zh-CN",
+    "scheme": "dark",
+    "root": "rgb(23, 23, 23)",
+    "body": "rgb(23, 23, 23)",
+    "shell": "rgb(23, 23, 23)",
+    "theme": "#171717",
+    "composer": 96,
+    "font": 28.72,
+    "align": "center",
+    "inputFont": 16,
+    "centerDelta": 0.0078125,
+    "bodyScroll": 0,
+    "buttons": [
+      {
+        "w": 44,
+        "h": 44
+      },
+      {
+        "w": 76.421875,
+        "h": 44
+      }
+    ],
+    "overflow": false
+  }
+]

@@ -1,0 +1,75 @@
+Mobile verification — macOS, Node 22.23.5, Python 3.12, Chrome via Playwright. Physical iPhone not tested.
+
+chatldt-mobile-check.log
+
+> chatldt@0.13.3 check
+> svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+
+Loading svelte-check in workspace: /Users/eric/Projects/ChatLDT
+Getting Svelte diagnostics...
+
+svelte-check found 0 errors and 0 warnings
+
+chatldt-mobile-frontend.log
+
+> chatldt@0.13.3 test:frontend
+> vitest run
+
+
+ RUN  v1.6.1 /Users/eric/Projects/ChatLDT
+
+ ✓ src/lib/utils/mobile-viewport.test.ts  (3 tests) 4ms
+ ✓ src/lib/utils/marked/katex-extension.test.ts  (2 tests) 9ms
+
+ Test Files  2 passed (2)
+      Tests  5 passed (5)
+   Start at  02:16:05
+   Duration  229ms (transform 37ms, setup 0ms, collect 56ms, tests 13ms, environment 0ms, prepare 114ms)
+
+
+chatldt-mobile-browser.log
+PASS 360 CSS px en-US light: welcome, drawer, modal, messages, long drafts, images, scroll restore
+PASS 360 CSS px en-US dark: welcome, drawer, modal, messages, long drafts, images, scroll restore
+PASS 360 CSS px zh-CN light: welcome, drawer, modal, messages, long drafts, images, scroll restore
+PASS 360 CSS px zh-CN dark: welcome, drawer, modal, messages, long drafts, images, scroll restore
+PASS 390 CSS px en-US light: welcome, drawer, modal, messages, long drafts, images, scroll restore
+PASS 390 CSS px en-US dark: welcome, drawer, modal, messages, long drafts, images, scroll restore
+PASS 390 CSS px zh-CN light: welcome, drawer, modal, messages, long drafts, images, scroll restore
+PASS 390 CSS px zh-CN dark: welcome, drawer, modal, messages, long drafts, images, scroll restore
+PASS 430 CSS px en-US light: welcome, drawer, modal, messages, long drafts, images, scroll restore
+PASS 430 CSS px en-US dark: welcome, drawer, modal, messages, long drafts, images, scroll restore
+PASS 430 CSS px zh-CN light: welcome, drawer, modal, messages, long drafts, images, scroll restore
+PASS 430 CSS px zh-CN dark: welcome, drawer, modal, messages, long drafts, images, scroll restore
+PASS native Chromium VisualViewport and emulated safe areas: portrait 47/34, landscape left 47/bottom 21, no double padding
+ALL MOBILE LAYOUT CHECKS PASSED (browser simulation; no physical iPhone certification)
+
+chatldt-mobile-regression-ui.log
+PASS existing administrator displays admin after refresh; no sender name rows; original orientation retained
+PASS hover travel, stable layout, alignment and edit permissions
+PASS exact raw Markdown/newline copy and separate code-block copy
+PASS Clipboard API missing fallback and permission-denied failure feedback
+PASS keyboard focus remains visible and normal text selection has no message container frame
+PASS native modal exit wait, focus return, fast open/close and reduced motion
+PASS registered user orientation, cancelled-history copy and complete source during progressive reply
+PASS touch toolbar, Chinese labels, mobile bounds and refreshed favicon/PWA branding
+PASS pure-image message has no text copy; text editing preserves its attachment
+PASS admin/user/guest settings, both languages and light/dark/system themes
+ALL UI POLISH CHECKS PASSED
+
+chatldt-mobile-regression-business.log
+PASS guest nickname, cancellation and first atomic send
+PASS persisted guest identity, shared tabs and text draft
+PASS administrator welcome/grouping, mirrored messages, live edit and reply
+PASS cancellation locks the round and retains administrator draft
+PASS Chinese, dark theme and mobile layout
+PASS guest signup/migration from UI with another live tab and draft preservation
+PASS combined multi-image send and protected preview with live ownership sync
+PASS disconnected client restores committed reply on reconnect without navigation
+PASS guest restored after the entire persistent-profile browser process closes and reopens
+ALL BROWSER CHECKS PASSED
+
+Backend: 38 passed, 11 existing warnings.
+Build: passed.
+CI Ruff --select F: passed.
+LICENSE/NOTICE unchanged.
+Branch: fix/mobile-chat-layout; no commit/push/merge/deployment.

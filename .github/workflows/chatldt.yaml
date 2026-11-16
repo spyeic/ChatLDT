@@ -1,0 +1,21 @@
+name: ChatLDT native checks
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5.1.0
+      - uses: actions/setup-node@v5.0.0
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v6.3.0
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: python -m venv .venv
+      - run: .venv/bin/python -m pip install -r backend/requirements.txt pytest==8.4.2 ruff==0.15.18
+      - run: npm run check
+      - run: npm run test:frontend
+      - run: npm run test:backend
+      - run: npm run build
+      - run: .venv/bin/ruff check backend/open_webui/manual backend/open_webui/main.py backend/open_webui/routers/manual.py --select F

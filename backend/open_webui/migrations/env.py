@@ -10,12 +10,7 @@ import alembic.context
 from alembic.runtime.migration import MigrationContext
 from open_webui.env import DATABASE_PASSWORD, DATABASE_SCHEMA, DATABASE_URL, LOG_FORMAT
 from open_webui.internal.db import enable_iam_token_auth, extract_ssl_params_from_url, reattach_ssl_params_to_url
-from open_webui.models.auths import Auth
-from open_webui.models.calendar import Calendar, CalendarEvent, CalendarEventAttendee  # noqa: F401
-from open_webui.models.chat_messages import ChatMessage  # noqa: F401
-from open_webui.models.chats import Chat  # noqa: F401
-from open_webui.models.comments import Comment, CommentReaction  # noqa: F401
-from open_webui.models.notifications import Notification  # noqa: F401
+from open_webui.internal.db import Base
 from sqlalchemy import create_engine, engine_from_config, inspect, pool
 
 alembic_config = alembic.context.config
@@ -26,7 +21,7 @@ if LOG_FORMAT == 'json':
 
     for log_handler in logging.root.handlers:
         log_handler.setFormatter(JSONFormatter())
-migration_metadata = Auth.metadata
+migration_metadata = Base.metadata
 target_db_url = DATABASE_URL
 base_url, ssl_query_params = extract_ssl_params_from_url(target_db_url)
 if ssl_query_params:

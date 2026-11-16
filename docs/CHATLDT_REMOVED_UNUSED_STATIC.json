@@ -1,0 +1,25 @@
+{
+  "backup": "/var/folders/2f/0kc6q0j959j0snzm4_gsms_h0000gn/T/chatldt-unused-static-gz3c0s3a",
+  "files": [
+    {
+      "path": "static/static/user-import.csv",
+      "sha256": "d918b069f601437e8fda78110b01c04fa8a623b00d1f87a6e557abc1ca94f026",
+      "reason": "Unused bulk-user-import sample or old splash loader; retained SvelteKit HTML has no loader reference and account management has no bulk import. Official brand images/notices remain."
+    },
+    {
+      "path": "backend/open_webui/static/user-import.csv",
+      "sha256": "d918b069f601437e8fda78110b01c04fa8a623b00d1f87a6e557abc1ca94f026",
+      "reason": "Unused bulk-user-import sample or old splash loader; retained SvelteKit HTML has no loader reference and account management has no bulk import. Official brand images/notices remain."
+    },
+    {
+      "path": "static/static/loader.js",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "reason": "Unused bulk-user-import sample or old splash loader; retained SvelteKit HTML has no loader reference and account management has no bulk import. Official brand images/notices remain."
+    },
+    {
+      "path": "backend/open_webui/static/loader.js",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "reason": "Unused bulk-user-import sample or old splash loader; retained SvelteKit HTML has no loader reference and account management has no bulk import. Official brand images/notices remain."
+    }
+  ]
+}

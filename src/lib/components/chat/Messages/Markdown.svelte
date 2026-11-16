@@ -1,149 +1,121 @@
-<script context="module">
-	import { marked } from 'marked';
-
-	import markedExtension from '$lib/utils/marked/extension';
-	import markedKatexExtension from '$lib/utils/marked/katex-extension';
-	import { disableSingleTilde } from '$lib/utils/marked/strikethrough-extension';
-	import { mentionExtension } from '$lib/utils/marked/mention-extension';
-	import colonFenceExtension from '$lib/utils/marked/colon-fence-extension';
-	import footnoteExtension from '$lib/utils/marked/footnote-extension';
-	import citationExtension from '$lib/utils/marked/citation-extension';
-
-	const options = {
-		throwOnError: false
+<script lang="ts" context="module">
+	import { marked, Renderer } from 'marked';
+	import DOMPurify from 'dompurify';
+	import hljs from 'highlight.js';
+	import katex from 'katex';
+	import mathExtension from '$lib/utils/marked/katex-extension';
+	const escape = (value: string) =>
+		value.replace(
+			/[&<>"']/g,
+			(c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] || c
+		);
+	const renderer = new Renderer();
+	renderer.html = (html) => escape(html);
+	renderer.image = (_href, _title, text) => escape(text || '');
+	renderer.code = (code, language) => {
+		const lang = (language || '').split(/\s/)[0];
+		const html =
+			lang && hljs.getLanguage(lang)
+				? hljs.highlight(code, { language: lang }).value
+				: escape(code);
+		return `<pre><code class="hljs">${html}</code></pre>`;
 	};
-
-	marked.use(markedKatexExtension(options));
-	marked.use(markedExtension(options));
-	marked.use(citationExtension(options));
-	marked.use(footnoteExtension(options));
-	marked.use(colonFenceExtension(options));
-	marked.use(disableSingleTilde);
-	// Also set by RichTextInput, but messages can render before any input mounts.
-	marked.use({ breaks: true });
+	marked.use({ renderer, breaks: true }, mathExtension({}));
 	marked.use({
-		extensions: [
-			mentionExtension({ triggerChar: '@' }),
-			mentionExtension({ triggerChar: '#' }),
-			mentionExtension({ triggerChar: '$' })
-		]
+		extensions: ['inlineKatex', 'blockKatex'].map((name) => ({
+			name,
+			renderer: (token: any) =>
+				katex.renderToString(token.text || '', {
+					displayMode: token.displayMode,
+					throwOnError: false,
+					trust: false,
+					maxExpand: 1000
+				})
+		}))
 	});
 </script>
 
-<script>
-	import { onDestroy, setContext } from 'svelte';
-	import { replaceTokens, processResponseContent } from '$lib/utils';
-	import { user } from '$lib/stores';
-
-	import MarkdownTokens from './Markdown/MarkdownTokens.svelte';
-
-	export let id = '';
-	export let chatId = '';
-	export let messageId = '';
-	export let content;
-	export let done = true;
-	export let model = null;
-	export let save = false;
-	export let preview = false;
-	export let compactPreview = false;
-
-	export let paragraphTag = 'p';
-	export let editCodeBlock = true;
-	export let topPadding = false;
-	export let allowEmbeds = false;
-	export let allowHtml = true;
-	export let allowRemoteContent = true;
-
-	setContext('markdown', {
-		get allowRemoteContent() {
-			return allowRemoteContent;
-		}
+<script lang="ts">
+	import { mount, unmount } from 'svelte';
+	import CopyButton from '$lib/components/common/CopyButton.svelte';
+	export let content = '';
+	$: html = DOMPurify.sanitize(marked.parse(content) as string, {
+		USE_PROFILES: { html: true, mathMl: true },
+		FORBID_TAGS: ['img', 'iframe', 'video', 'audio', 'form', 'input', 'svg']
 	});
-
-	export let sourceIds = [];
-
-	export let onSave = () => {};
-	export let onUpdate = () => {};
-
-	export let onPreview = () => {};
-
-	export let onSourceClick = () => {};
-	export let onTaskClick = () => {};
-	export let onToolCallResolved = () => {};
-
-	let tokens = [];
-	let pendingUpdate = null;
-	let lastContent = '';
-	let lastParsedContent = '';
-
-	const parseTokens = () => {
-		if (content === lastContent) return;
-		lastContent = content;
-
-		const processed = replaceTokens(processResponseContent(content), model?.name, $user?.name);
-		if (processed === lastParsedContent) return;
-		lastParsedContent = processed;
-
-		tokens = marked.lexer(processed);
-		if (!allowHtml || !allowRemoteContent) {
-			marked.walkTokens(tokens, (token) => {
-				if (
-					(!allowHtml && token.type === 'html') ||
-					(!allowRemoteContent &&
-						['html', 'image', 'iframe', 'mention', 'details', 'colonFence'].includes(token.type))
-				) {
-					const raw = token.raw;
-					// Drop child tokens too, so blocked content cannot render through a nested renderer.
-					for (const key of Object.keys(token)) Reflect.deleteProperty(token, key);
-					Object.assign(token, { type: 'text', raw, text: raw });
-				}
-			});
+	function enhanceCodeBlocks(node: HTMLElement, _html: string) {
+		let mounted: ReturnType<typeof mount>[] = [];
+		function cleanup() {
+			for (const component of mounted) void unmount(component);
+			mounted = [];
 		}
-	};
-
-	const updateHandler = (content) => {
-		if (content) {
-			if (done) {
-				cancelAnimationFrame(pendingUpdate);
-				pendingUpdate = null;
-				parseTokens();
-			} else if (!pendingUpdate) {
-				pendingUpdate = requestAnimationFrame(() => {
-					pendingUpdate = null;
-					parseTokens();
-				});
+		function decorate() {
+			for (const pre of node.querySelectorAll('pre')) {
+				const code = pre.querySelector('code');
+				if (!code) continue;
+				const wrapper = document.createElement('div');
+				wrapper.className = 'code-block';
+				pre.before(wrapper);
+				wrapper.append(pre);
+				const actions = document.createElement('div');
+				actions.className = 'code-actions';
+				wrapper.append(actions);
+				mounted.push(
+					mount(CopyButton, {
+						target: actions,
+						props: { text: code.textContent || '', code: true, align: 'end' }
+					})
+				);
 			}
 		}
-	};
-
-	$: updateHandler(content);
-
-	// Throttle parsing to once per animation frame while streaming
-	onDestroy(() => {
-		cancelAnimationFrame(pendingUpdate);
-	});
+		decorate();
+		return {
+			update(_value: string) {
+				cleanup();
+				decorate();
+			},
+			destroy: cleanup
+		};
+	}
 </script>
 
-{#key id}
-	<MarkdownTokens
-		{tokens}
-		{id}
-		{chatId}
-		{messageId}
-		{done}
-		{save}
-		{preview}
-		{compactPreview}
-		{paragraphTag}
-		{editCodeBlock}
-		{sourceIds}
-		{topPadding}
-		{allowEmbeds}
-		{onTaskClick}
-		{onSourceClick}
-		{onToolCallResolved}
-		{onSave}
-		{onUpdate}
-		{onPreview}
-	/>
-{/key}
+<div use:enhanceCodeBlocks={html} class="markdown prose dark:prose-invert max-w-none break-words">
+	{@html html}
+</div>
+
+<style>
+	.markdown :global(.code-block) {
+		position: relative;
+		max-width: 100%;
+	}
+	.markdown :global(.code-actions) {
+		position: absolute;
+		inset-block-start: 5px;
+		inset-inline-end: 6px;
+		color: #d4d4d4;
+	}
+	.markdown :global(pre) {
+		overflow-x: auto;
+		padding: 2.6rem 1rem 1rem;
+		border-radius: 0.75rem;
+		background: #171717;
+		color: #eee;
+	}
+	.markdown :global(pre code.hljs) {
+		display: block;
+		padding: 0;
+		background: transparent;
+	}
+	.markdown :global(a) {
+		text-decoration: underline;
+	}
+	.markdown :global(table) {
+		display: block;
+		overflow-x: auto;
+	}
+	@media (max-width: 767px), (max-height: 500px) and (pointer: coarse) {
+		.markdown :global(pre) {
+			padding-block-start: 3.5rem;
+		}
+	}
+</style>
