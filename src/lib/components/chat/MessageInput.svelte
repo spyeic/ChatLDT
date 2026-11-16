@@ -23,8 +23,8 @@
 	}
 </script>
 
-<form class="composer w-full max-w-3xl mx-auto px-3 pb-4" on:submit|preventDefault={onSend}>
-	<div class="composer-box rounded-3xl bg-gray-100 dark:bg-gray-850 p-3 shadow-sm">
+<form class="composer conversation-width" on:submit|preventDefault={onSend}>
+	<div class="composer-box">
 		{#if images.length}
 			<div class="image-drafts flex gap-2 flex-wrap mb-2">
 				{#each images as image, i}
@@ -50,7 +50,12 @@
 				placeholder={label}
 				on:paste={paste}
 				on:keydown={(event) => {
-					if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+					if (
+						event.key === 'Enter' &&
+						!event.shiftKey &&
+						!event.isComposing &&
+						event.keyCode !== 229
+					) {
 						event.preventDefault();
 						if (!disabled && !busy) onSend();
 					}
@@ -79,14 +84,19 @@
 			<div class="flex gap-2">
 				{#if canCancel}<button
 						type="button"
-						class="rounded-full border px-4 py-2"
+						class="primary-button round-action cancel-button"
+						aria-label={cancelLabel}
+						title={cancelLabel}
 						disabled={busy}
-						on:click={onCancel}>{cancelLabel} ■</button
+						on:click={onCancel}><ActionIcon name="stop" /></button
 					>{/if}
 				<button
 					type="submit"
-					class="primary-button rounded-full bg-gray-900 text-white dark:bg-white dark:text-gray-900 px-4 py-2 disabled:opacity-40"
-					disabled={disabled || busy || (!text.trim() && !images.length)}>{sendLabel} ↑</button
+					class="primary-button round-action"
+					aria-label={sendLabel}
+					title={sendLabel}
+					disabled={disabled || busy || (!text.trim() && !images.length)}
+					><ActionIcon name="up" /></button
 				>
 			</div>
 		</div>
@@ -96,12 +106,48 @@
 <style>
 	.composer {
 		flex-shrink: 0;
+		padding-bottom: 20px;
+	}
+	.composer-box {
+		padding: 12px;
+		border-radius: 26px;
+		background: var(--composer-bg);
+		box-shadow: var(--composer-shadow);
+	}
+	.composer-actions {
+		margin-top: 4px;
+	}
+	.round-action {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		border: 0;
+		border-radius: 50%;
+		padding: 0;
+		background: var(--send-bg);
+		color: var(--send-text);
+	}
+	.round-action:disabled {
+		opacity: 1;
+		background: var(--disabled-bg);
+		color: var(--disabled-text);
+	}
+	.cancel-button {
+		background: var(--send-bg);
+		color: var(--send-text);
+	}
+	.image-drafts {
+		max-height: min(176px, calc(var(--app-viewport-height, var(--app-height)) * 0.2));
+		overflow-y: auto;
+		overscroll-behavior: contain;
 	}
 	.growable-textarea > textarea {
 		display: block;
 		width: 100%;
 		height: auto;
-		min-height: 80px;
+		min-height: 36px;
 		max-height: min(16rem, 30dvh);
 		overflow-y: auto;
 		field-sizing: content;
@@ -114,7 +160,7 @@
 		.growable-textarea::after,
 		.growable-textarea > textarea {
 			grid-area: 1/1;
-			min-height: 80px;
+			min-height: 36px;
 			max-height: min(16rem, 30dvh);
 			font: inherit;
 			line-height: 24px;
@@ -153,6 +199,7 @@
 			padding-inline: 12px;
 			white-space: nowrap;
 		}
+		.composer-actions .round-action,
 		.composer-actions .upload-button {
 			min-width: 44px;
 			padding: 0;

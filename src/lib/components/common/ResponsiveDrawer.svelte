@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	export let open = false;
+	export let collapsed = false;
 	export let label = '';
 	export let closeLabel = '';
 	export let onClose = () => {};
@@ -130,6 +131,8 @@
 	id="chat-sidebar"
 	class="drawer"
 	class:mobile
+	class:collapsed
+	inert={!mobile && collapsed}
 	class:mounted
 	class:active
 	popover={mobile && supportsPopover ? 'manual' : undefined}
@@ -149,7 +152,14 @@
 
 <style>
 	.drawer {
-		display: contents;
+		display: block;
+		inline-size: var(--sidebar-width);
+		flex-shrink: 0;
+		overflow: hidden;
+		transition: inline-size 230ms cubic-bezier(0.2, 0.7, 0.2, 1);
+	}
+	.drawer.collapsed:not(.mobile) {
+		inline-size: 0;
 	}
 	.drawer-shade {
 		display: none;
@@ -209,6 +219,7 @@
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
+		.drawer,
 		.drawer-shade,
 		.drawer.mobile :global(.sidebar) {
 			transition-duration: 0s;

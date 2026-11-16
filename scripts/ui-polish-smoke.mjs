@@ -50,6 +50,12 @@ async function api(context, path, method = 'GET', body) {
 }
 try {
 	await login(admin, creds.email, creds.password);
+	await api(adminContext, '/profile', 'PATCH', {
+		name: 'admin',
+		language: 'en-US',
+		theme: 'system'
+	});
+	await admin.reload();
 	await admin.getByRole('button', { name: 'admin', exact: true }).waitFor();
 	await admin.reload();
 	await admin.getByRole('button', { name: 'admin', exact: true }).waitFor();
@@ -266,6 +272,7 @@ try {
 	const user = await userContext.newPage();
 	user.on('pageerror', (e) => errors.push(e.message));
 	await login(user, creds.user_email, creds.user_password);
+	await api(userContext, '/profile', 'PATCH', { name: 'E', language: 'en-US', theme: 'system' });
 	await user.goto(base + '/c/' + creds.chat_id);
 	await user.locator('main article').first().waitFor();
 	const registered = (await api(userContext, '/session')).identity;
@@ -276,9 +283,9 @@ try {
 	);
 	assert.equal(await user.locator('main article .edit-message').count(), 0);
 	await user.locator('#chat-input').fill('工具栏回归：下一轮问题');
-	await user.getByRole('button', { name: 'Send ↑', exact: true }).click();
-	await user.getByRole('button', { name: 'Stop generating ■', exact: true }).waitFor();
-	await user.getByRole('button', { name: 'Stop generating ■', exact: true }).click();
+	await user.getByRole('button', { name: 'Send', exact: true }).click();
+	await user.getByRole('button', { name: 'Stop generating', exact: true }).waitFor();
+	await user.getByRole('button', { name: 'Stop generating', exact: true }).click();
 	await user.getByText('Cancelled', { exact: true }).waitFor();
 	const cancelled = user.locator('main article').last();
 	assert.equal(await cancelled.locator('.edit-message').count(), 0);
@@ -286,8 +293,8 @@ try {
 	await cancelled.locator('.copy-button').click();
 	assert.equal(await user.evaluate(() => navigator.clipboard.readText()), '工具栏回归：下一轮问题');
 	await user.locator('#chat-input').fill('渐进回复复制');
-	await user.getByRole('button', { name: 'Send ↑', exact: true }).click();
-	await user.getByRole('button', { name: 'Stop generating ■', exact: true }).waitFor();
+	await user.getByRole('button', { name: 'Send', exact: true }).click();
+	await user.getByRole('button', { name: 'Stop generating', exact: true }).waitFor();
 	await user.bringToFront();
 	await user.waitForFunction(() => document.visibilityState === 'visible');
 	await user.waitForLoadState('networkidle');
@@ -324,7 +331,7 @@ try {
 	touch.on('pageerror', (e) => errors.push(e.message));
 	await touch.goto(base);
 	await touch.locator('#chat-input').fill('游客工具栏检查');
-	await touch.getByRole('button', { name: '发送 ↑', exact: true }).click();
+	await touch.getByRole('button', { name: '发送', exact: true }).click();
 	await touch.locator('#modal-field').fill('触屏游客');
 	await touch.getByRole('button', { name: '确认', exact: true }).click();
 	await touch.locator('main article').first().waitFor();
@@ -347,10 +354,8 @@ try {
 		'PASS touch toolbar, Chinese labels, mobile bounds and refreshed favicon/PWA branding'
 	);
 	// A pure-image message retains text editing but offers no text copy action.
-	await touch.getByRole('button', { name: '停止生成 ■', exact: true }).click();
-	await touch
-		.getByRole('button', { name: '停止生成 ■', exact: true })
-		.waitFor({ state: 'detached' });
+	await touch.getByRole('button', { name: '停止生成', exact: true }).click();
+	await touch.getByRole('button', { name: '停止生成', exact: true }).waitFor({ state: 'detached' });
 	const png = Buffer.from(
 		'iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAANUlEQVR4nO3QsQ0AMAzDsLT//9yeoCkbeYAN6LzZdZf3x0GSKEmUJEoSJYmSREmiJFGSaMoHo8QBPwYSAhsAAAAASUVORK5CYII=',
 		'base64'
@@ -359,7 +364,7 @@ try {
 		.locator('input[type=file]')
 		.first()
 		.setInputFiles({ name: 'only-image.png', mimeType: 'image/png', buffer: png });
-	await touch.getByRole('button', { name: '发送 ↑', exact: true }).click();
+	await touch.getByRole('button', { name: '发送', exact: true }).click();
 	await touch.locator('main article').last().locator('img').waitFor();
 	assert.equal(await touch.locator('main article').last().locator('.copy-button').count(), 0);
 	await touch.locator('main article').last().locator('.edit-message').click();

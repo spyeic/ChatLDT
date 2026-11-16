@@ -30,11 +30,11 @@ for (const p of [user, admin]) p.on('pageerror', (e) => errors.push(e.message));
 try {
 	await user.goto(base);
 	await user.locator('#chat-input').fill('Browser first question');
-	await user.getByRole('button', { name: 'Send ↑', exact: true }).click();
+	await user.getByRole('button', { name: 'Send', exact: true }).click();
 	await user.getByRole('heading', { name: 'Choose a nickname' }).waitFor();
 	await user.getByRole('button', { name: 'Cancel', exact: true }).click();
 	assert.equal(await user.locator('#chat-input').inputValue(), 'Browser first question');
-	await user.getByRole('button', { name: 'Send ↑', exact: true }).click();
+	await user.getByRole('button', { name: 'Send', exact: true }).click();
 	await user.locator('#modal-field').fill(guestName);
 	await user.getByRole('button', { name: 'Confirm', exact: true }).click();
 	await user.locator('dialog').waitFor({ state: 'hidden' });
@@ -42,7 +42,7 @@ try {
 	console.log('PASS guest nickname, cancellation and first atomic send');
 	const chatUrl = user.url();
 	await user.locator('#chat-input').fill('draft while waiting');
-	assert.equal(await user.getByRole('button', { name: 'Send ↑', exact: true }).isDisabled(), true);
+	assert.equal(await user.getByRole('button', { name: 'Send', exact: true }).isDisabled(), true);
 	await user.reload();
 	await user.locator('main article').first().waitFor();
 	assert.equal(await user.locator('#chat-input').inputValue(), 'draft while waiting');
@@ -73,20 +73,20 @@ try {
 	await user.locator('dialog').waitFor({ state: 'hidden' });
 	await admin.getByText('Browser edited question', { exact: true }).waitFor();
 	assert.equal(await admin.locator('#chat-input').inputValue(), 'Prepared answer');
-	await admin.getByRole('button', { name: 'Send ↑', exact: true }).click();
+	await admin.getByRole('button', { name: 'Send', exact: true }).click();
 	await user
-		.getByRole('button', { name: 'Stop generating ■', exact: true })
+		.getByRole('button', { name: 'Stop generating', exact: true })
 		.waitFor({ state: 'detached' });
 	await user.waitForFunction(
 		() => document.querySelector('form button[type=submit]')?.disabled === false
 	);
-	assert.equal(await user.getByRole('button', { name: 'Send ↑', exact: true }).isDisabled(), false);
+	assert.equal(await user.getByRole('button', { name: 'Send', exact: true }).isDisabled(), false);
 	await user.getByText('Prepared answer', { exact: true }).waitFor();
 	assert.equal(await user.locator('#chat-input').inputValue(), 'draft while waiting');
 	await user.waitForFunction(
 		() => document.querySelector('form button[type=submit]')?.disabled === false
 	);
-	assert.equal(await user.getByRole('button', { name: 'Send ↑', exact: true }).isDisabled(), false);
+	assert.equal(await user.getByRole('button', { name: 'Send', exact: true }).isDisabled(), false);
 	assert.equal(
 		await user
 			.locator('main article')
@@ -102,20 +102,20 @@ try {
 		false
 	);
 	console.log('PASS administrator welcome/grouping, mirrored messages, live edit and reply');
-	await user.getByRole('button', { name: 'Send ↑', exact: true }).click();
-	await user.getByRole('button', { name: 'Stop generating ■', exact: true }).waitFor();
+	await user.getByRole('button', { name: 'Send', exact: true }).click();
+	await user.getByRole('button', { name: 'Stop generating', exact: true }).waitFor();
 	await admin.locator('#chat-input').fill('Retained administrator draft');
-	await user.getByRole('button', { name: 'Stop generating ■', exact: true }).click();
+	await user.getByRole('button', { name: 'Stop generating', exact: true }).click();
 	await admin.getByText('Cancelled', { exact: true }).waitFor();
 	assert.equal(await admin.locator('#chat-input').inputValue(), 'Retained administrator draft');
-	assert.equal(await admin.getByRole('button', { name: 'Send ↑', exact: true }).isDisabled(), true);
+	assert.equal(await admin.getByRole('button', { name: 'Send', exact: true }).isDisabled(), true);
 	console.log('PASS cancellation locks the round and retains administrator draft');
 	await user.getByRole('button', { name: guestName, exact: true }).click();
 	await user.locator('#language').selectOption('zh-CN');
 	await user.locator('#theme').selectOption('dark');
 	await user.getByRole('button', { name: 'Confirm', exact: true }).click();
 	await user.locator('dialog').waitFor({ state: 'hidden' });
-	await user.getByRole('button', { name: '发送 ↑', exact: true }).waitFor();
+	await user.getByRole('button', { name: '发送', exact: true }).waitFor();
 	assert.equal(await user.locator('html').getAttribute('lang'), 'zh-CN');
 	assert.equal(await user.locator('html').evaluate((e) => e.classList.contains('dark')), true);
 	await user.setViewportSize({ width: 390, height: 844 });
@@ -156,7 +156,7 @@ try {
 			new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true })
 		);
 	}, Array.from(png));
-	await user.getByRole('button', { name: '发送 ↑', exact: true }).click();
+	await user.getByRole('button', { name: '发送', exact: true }).click();
 	await user.locator('main article').last().locator('img').nth(1).waitFor();
 	assert.equal(await user.locator('main article').last().locator('img').count(), 2);
 	await user.waitForFunction(() =>
@@ -178,7 +178,7 @@ try {
 	);
 	await guestContext.setOffline(true);
 	await admin.locator('#chat-input').fill('Reconnect recovery answer');
-	await admin.getByRole('button', { name: 'Send ↑', exact: true }).click();
+	await admin.getByRole('button', { name: 'Send', exact: true }).click();
 	await admin.getByText('Reconnect recovery answer', { exact: true }).waitFor();
 	await guestContext.setOffline(false);
 	await user.getByText('Reconnect recovery answer', { exact: true }).waitFor();
@@ -197,7 +197,7 @@ try {
 		let page = persistent.pages()[0] || (await persistent.newPage());
 		await page.goto(base);
 		await page.locator('#chat-input').fill('browser restart persistence');
-		await page.getByRole('button', { name: 'Send ↑', exact: true }).click();
+		await page.getByRole('button', { name: 'Send', exact: true }).click();
 		await page.locator('#modal-field').fill('Persistent Guest');
 		await page.getByRole('button', { name: 'Confirm', exact: true }).click();
 		await page.locator('main article').first().waitFor();

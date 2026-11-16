@@ -61,5 +61,8 @@
 	"Their message": "对方的消息",
 	"Attach images": "添加图片",
 	"Remove image": "移除图片",
-	"Close sidebar": "关闭侧边栏"
+	"Close sidebar": "关闭侧边栏",
+	"Open sidebar": "展开侧边栏",
+	"Back to bottom": "回到底部",
+	"Choose a user to start a conversation": "选择用户开始对话"
 }

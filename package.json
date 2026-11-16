@@ -20,7 +20,8 @@
 		"prebuild": "node scripts/licenses.mjs",
 		"predev": "node scripts/licenses.mjs",
 		"test:ui": "node scripts/ui-polish-smoke.mjs",
-		"test:mobile": "node scripts/mobile-layout-smoke.mjs"
+		"test:mobile": "node scripts/mobile-layout-smoke.mjs",
+		"test:chat-style": "node scripts/chat-style-smoke.mjs"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-static": "^3.0.2",

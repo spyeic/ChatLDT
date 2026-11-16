@@ -38,6 +38,45 @@
 	let dialog: Modal;
 	let sidebar: Sidebar;
 	let welcomeShown = false;
+	let desktopCollapsed = false;
+	let following = true,
+		awayFromBottom = false;
+	let scrollFrame = 0;
+	$: hasMessages = !!current?.messages?.length;
+	$: needsRecipient = !!identity?.admin && !targetUser && !current;
+	function trackScroll() {
+		if (!mainScroll || !hasMessages) return;
+		awayFromBottom = mainScroll.scrollHeight - mainScroll.clientHeight - mainScroll.scrollTop > 64;
+		following = !awayFromBottom;
+	}
+	function scrollToBottom() {
+		following = true;
+		awayFromBottom = false;
+		if (mainScroll) mainScroll.scrollTop = mainScroll.scrollHeight;
+	}
+	function observeMessages(node: HTMLElement) {
+		const observer = new ResizeObserver(() => {
+			cancelAnimationFrame(scrollFrame);
+			scrollFrame = requestAnimationFrame(() => {
+				if (following) scrollToBottom();
+				else trackScroll();
+			});
+		});
+		observer.observe(node);
+		return { destroy: () => observer.disconnect() };
+	}
+	async function collapseSidebar() {
+		desktopCollapsed = true;
+		localStorage.setItem('ldt:sidebar-collapsed', 'true');
+		await tick();
+		document
+			.querySelector<HTMLButtonElement>('.desktop-sidebar-trigger')
+			?.focus({ preventScroll: true });
+	}
+	function expandSidebar() {
+		desktopCollapsed = false;
+		localStorage.setItem('ldt:sidebar-collapsed', 'false');
+	}
 	function welcomeEntrance(node: HTMLElement) {
 		if (!welcomeShown) {
 			welcomeShown = true;
@@ -83,7 +122,8 @@
 		rename: translate('Rename'),
 		delete: translate('Delete'),
 		login: translate('Sign in'),
-		close: translate('Close sidebar')
+		close: translate('Close sidebar'),
+		dismiss: translate('Dismiss')
 	};
 	$: if (ready && routeSeen !== routeId) {
 		routeSeen = routeId;
@@ -312,6 +352,8 @@
 		}
 	}
 	async function select(id: string) {
+		following = true;
+		awayFromBottom = false;
 		const generation = ++selectGeneration;
 		loadedDraft = false;
 		current = null;
@@ -346,6 +388,7 @@
 		if (generation === selectGeneration) {
 			loadedDraft = true;
 			await tick();
+			scrollToBottom();
 			await markRead();
 		}
 	}
@@ -506,6 +549,7 @@
 			};
 			if (currentId === id) {
 				if (text === payload.content) text = '';
+				following = true;
 				current = await api('/chats/' + id);
 				await tick();
 				await markRead();
@@ -667,6 +711,7 @@
 		}
 	}
 	onMount(() => {
+		desktopCollapsed = localStorage.getItem('ldt:sidebar-collapsed') === 'true';
 		void (async () => {
 			try {
 				await refreshIdentity();
@@ -697,6 +742,7 @@
 			socket?.disconnect();
 			channel?.close();
 			clearTimeout(searchTimer);
+			cancelAnimationFrame(scrollFrame);
 			document.removeEventListener('visibilitychange', visible);
 			document.removeEventListener('pointerdown', interact);
 			document.removeEventListener('keydown', interact);
@@ -712,6 +758,8 @@
 <div class="app-shell flex w-full text-gray-900 dark:text-gray-100">
 	<Sidebar
 		bind:this={sidebar}
+		collapsed={desktopCollapsed}
+		onCollapse={collapseSidebar}
 		onClose={() => (sidebarOpen = false)}
 		{identity}
 		chats={chatList}
@@ -738,8 +786,21 @@
 				aria-label={translate('Toggle sidebar')}
 				aria-expanded={sidebarOpen}
 				aria-controls="chat-sidebar"
-				on:click={() => (sidebarOpen = !sidebarOpen)}><ActionIcon name="menu" /></button
-			><span class="text-lg font-medium truncate">{current?.title || 'ChatLDT'}</span
+				on:click={() => (sidebarOpen = !sidebarOpen)}><ActionIcon name="sidebar" /></button
+			>
+			{#if desktopCollapsed}<button
+					class="icon-button desktop-sidebar-trigger"
+					aria-label={translate('Open sidebar')}
+					title={translate('Open sidebar')}
+					aria-controls="chat-sidebar"
+					aria-expanded="false"
+					on:click={expandSidebar}><ActionIcon name="sidebar" /></button
+				>{/if}
+			<span class="header-title truncate"
+				>{current?.title ||
+					(targetUser
+						? userList.find((u) => u.id === targetUser)?.name
+						: translate('New Chat'))}</span
 			>{#if identity && !connected}<span class="text-xs text-gray-500"
 					>{translate('Reconnecting…')}</span
 				>{/if}
@@ -754,95 +815,110 @@
 					on:click={() => (error = '')}><ActionIcon name="close" /></button
 				>
 			</p>{/if}
-		<main
-			bind:this={mainScroll}
-			class:welcome-scroll={!current?.messages?.length}
-			class="chat-scroll flex-1 min-h-0 overflow-y-auto px-4"
-		>
-			{#if current?.messages?.length}
-				<div class="max-w-3xl mx-auto py-6 space-y-7">
-					{#each current.messages as message (message.id)}
-						<article
-							class="message-row flex"
-							class:justify-end={message.side === ownSide}
-							data-message-id={message.id}
-							aria-label={translate(message.side === ownSide ? 'Your message' : 'Their message')}
-						>
-							<div class="message-column" class:own={message.side === ownSide}>
-								<div
-									class="message-bubble rounded-3xl p-4"
-									class:bg-gray-100={message.side === ownSide}
-									class:dark:bg-gray-850={message.side === ownSide}
-								>
-									{#if message.attachments.length}<div
-											class="flex flex-wrap gap-2"
-											class:mb-3={!!message.content}
-										>
-											{#each message.attachments as fid}<a
-													href={'/api/v1/ldt/files/' + fid}
-													target="_blank"
-													rel="noopener noreferrer"
-													><img
-														src={'/api/v1/ldt/files/' + fid}
-														alt={translate('Attached image')}
-														class="max-h-72 max-w-full rounded-xl"
-														loading="lazy"
-													/></a
-												>{/each}
-										</div>{/if}
-									<Markdown content={animations[message.id] ?? message.content} />
-									{#if message.cancelled}<span class="text-xs text-gray-500"
-											>{translate('Cancelled')}</span
-										>{/if}
+		<div class="conversation-workspace" class:welcome-workspace={!hasMessages}>
+			<main
+				bind:this={mainScroll}
+				class:welcome-scroll={!hasMessages}
+				on:scroll={trackScroll}
+				class="chat-scroll flex-1 min-h-0 overflow-y-auto"
+			>
+				{#if current?.messages?.length}
+					<div class="message-list conversation-width" use:observeMessages>
+						{#each current.messages as message (message.id)}
+							<article
+								class="message-row flex"
+								class:justify-end={message.side === ownSide}
+								data-message-id={message.id}
+								aria-label={translate(message.side === ownSide ? 'Your message' : 'Their message')}
+							>
+								<div class="message-column" class:own={message.side === ownSide}>
+									<div class="message-bubble">
+										{#if message.attachments.length}<div
+												class="flex flex-wrap gap-2"
+												class:mb-3={!!message.content}
+											>
+												{#each message.attachments as fid}<a
+														href={'/api/v1/ldt/files/' + fid}
+														target="_blank"
+														rel="noopener noreferrer"
+														><img
+															src={'/api/v1/ldt/files/' + fid}
+															alt={translate('Attached image')}
+															class="max-h-72 max-w-full rounded-xl"
+															loading="lazy"
+														/></a
+													>{/each}
+											</div>{/if}
+										<Markdown content={animations[message.id] ?? message.content} />
+										{#if message.cancelled}<span class="text-xs text-gray-500"
+												>{translate('Cancelled')}</span
+											>{/if}
+									</div>
+									<MessageActions
+										content={message.content}
+										own={message.side === ownSide}
+										editable={message.side === ownSide &&
+											message.seq === current.seq &&
+											!message.locked &&
+											!message.cancelled}
+										onEdit={() => openModal('edit', currentId, message)}
+									/>
 								</div>
-								<MessageActions
-									content={message.content}
-									own={message.side === ownSide}
-									editable={message.side === ownSide &&
-										message.seq === current.seq &&
-										!message.locked &&
-										!message.cancelled}
-									onEdit={() => openModal('edit', currentId, message)}
-								/>
-							</div>
-						</article>
-					{/each}
-					{#if canCancel}<div class="thinking text-gray-500 pb-3">
-							{translate('Thinking…')}
-						</div>{/if}
+							</article>
+						{/each}
+						{#if canCancel}<div class="thinking text-gray-500 pb-3">
+								{translate('Thinking…')}
+							</div>{/if}
+					</div>
+				{/if}
+			</main>
+			<div class="composer-region">
+				{#if hasMessages && awayFromBottom}
+					<button
+						class="jump-bottom icon-button"
+						aria-label={translate('Back to bottom')}
+						title={translate('Back to bottom')}
+						on:click={scrollToBottom}><ActionIcon name="down" /></button
+					>
+				{/if}
+				{#if !hasMessages}
+					<div class="welcome-group conversation-width" use:welcomeEntrance>
+						<img src="/chatldt-icon-v1.svg" alt="ChatLDT" />
+						<h1 class="welcome-title">
+							{translate(
+								needsRecipient
+									? 'Choose a user to start a conversation'
+									: 'How can I help you today?'
+							)}
+						</h1>
+						{#if needsRecipient}<button class="recipient-button" on:click={() => openModal('new')}
+								><ActionIcon name="plus" />{translate('Choose a registered user')}</button
+							>{/if}
+					</div>
+				{/if}
+				{#if pending[currentId]}<button
+						class="text-sm underline p-2"
+						disabled={busy}
+						on:click={() => send(true)}>{translate('Retry previous send')}</button
+					>{/if}
+				<div class="editor-slot" hidden={needsRecipient} inert={needsRecipient}>
+					<MessageInput
+						bind:text
+						disabled={!canSend}
+						{busy}
+						{canCancel}
+						label={translate('Send a message')}
+						sendLabel={translate('Send')}
+						cancelLabel={translate('Stop generating')}
+						{images}
+						onSend={() => send()}
+						onCancel={cancel}
+						onFiles={addImages}
+						onRemove={removeImage}
+					/>
 				</div>
-			{:else}
-				<div class="welcome-group" use:welcomeEntrance>
-					<img class="size-14" src="/chatldt-icon-v1.svg" alt="ChatLDT" />
-					<h1 class="welcome-title text-3xl font-semibold">
-						{translate('How can I help you today?')}
-					</h1>
-					{#if identity?.admin && !targetUser}<button
-							class="rounded-full border px-5 py-3"
-							on:click={() => openModal('new')}>{translate('Start a conversation')}</button
-						>{/if}
-				</div>
-			{/if}
-		</main>
-		{#if pending[currentId]}<button
-				class="text-sm underline p-2"
-				disabled={busy}
-				on:click={() => send(true)}>{translate('Retry previous send')}</button
-			>{/if}
-		<MessageInput
-			bind:text
-			disabled={!canSend}
-			{busy}
-			{canCancel}
-			label={translate('Send a message')}
-			sendLabel={translate('Send')}
-			cancelLabel={translate('Stop generating')}
-			{images}
-			onSend={() => send()}
-			onCancel={cancel}
-			onFiles={addImages}
-			onRemove={removeImage}
-		/>
+			</div>
+		</div>
 	</div>
 </div>
 <Modal
@@ -1040,27 +1116,139 @@
 		background: var(--app-bg);
 		overflow: hidden;
 	}
+	.chat-pane {
+		min-height: 0;
+	}
+	.chat-header {
+		flex-shrink: 0;
+		min-height: 60px;
+	}
+	.header-title {
+		font-size: 15px;
+		font-weight: 500;
+		color: var(--muted-text);
+	}
+	.conversation-workspace {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		min-height: 0;
+	}
+	.welcome-workspace {
+		justify-content: center;
+		padding-bottom: clamp(40px, 14dvh, 150px);
+		overflow-y: auto;
+	}
+	.welcome-scroll {
+		display: none;
+	}
+	.chat-scroll {
+		overscroll-behavior: contain;
+		overflow-x: hidden;
+	}
+	.message-list {
+		padding-block: 24px 40px;
+	}
+	.message-row + .message-row {
+		margin-top: 24px;
+	}
+	.composer-region {
+		position: relative;
+		flex-shrink: 0;
+	}
 	.welcome-group {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
-		min-height: 55dvh;
-		gap: 18px;
+		gap: 16px;
+		margin-bottom: 28px;
 		text-align: center;
 	}
+	.welcome-group > img {
+		width: 30px;
+		height: 30px;
+	}
 	.welcome-title {
+		font-size: clamp(1.75rem, 1.4rem + 0.7vw, 2rem);
+		line-height: 1.3;
+		font-weight: 450;
+		letter-spacing: -0.025em;
 		text-wrap: balance;
 	}
-	.chat-pane {
-		min-height: 0;
+	.recipient-button {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		margin-top: 8px;
+		border-radius: 24px;
+		padding: 12px 18px;
+		background: var(--composer-bg);
+		font-size: 14px;
 	}
-	.chat-scroll {
-		overscroll-behavior: contain;
+	.jump-bottom {
+		position: absolute;
+		z-index: 2;
+		top: -48px;
+		left: 50%;
+		translate: -50% 0;
+		width: 36px;
+		height: 36px;
+		border: 1px solid var(--subtle-border);
+		border-radius: 50%;
+		background: var(--panel-bg);
+		box-shadow: 0 2px 6px #0001;
+	}
+	.message-column {
+		min-width: 0;
+		max-width: 100%;
+		width: 100%;
+	}
+	.message-column.own {
+		width: fit-content;
+		max-width: 82%;
+	}
+	.message-bubble {
+		min-width: 0;
+		border: 0;
+		box-shadow: none;
+		padding: 4px 0;
+	}
+	.own .message-bubble {
+		background: var(--bubble-bg);
+		border-radius: 24px;
+		padding: 12px 20px;
+	}
+	.message-bubble :global(img) {
+		object-fit: contain;
+		width: auto;
+		height: auto;
+		max-width: 100%;
+		max-height: 288px;
+	}
+	.message-bubble :global(a:has(img)) {
+		max-width: 100%;
+	}
+	.message-bubble :global(.markdown > :first-child) {
+		margin-block-start: 0;
+	}
+	.message-bubble :global(.markdown > :last-child) {
+		margin-block-end: 0;
+	}
+	.chat-scroll:focus:not(:focus-visible) {
+		outline: none;
+	}
+	.thinking {
+		color: var(--muted-text);
+		font-size: 14px;
+		padding-block: 16px;
 	}
 	@media (max-width: 767px), (max-height: 500px) and (pointer: coarse) {
 		.mobile-sidebar-trigger {
 			display: inline-flex;
+		}
+		.desktop-sidebar-trigger {
+			display: none;
 		}
 		.app-shell {
 			position: fixed;
@@ -1072,40 +1260,59 @@
 			padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
 		}
 		.chat-header {
-			flex-shrink: 0;
 			min-height: 56px;
 			padding-block: 6px;
 		}
-		.welcome-scroll {
-			display: flex;
-			flex-direction: column;
+		.welcome-workspace {
+			padding-bottom: 0;
+		}
+		.welcome-workspace .composer-region {
+			margin-block: auto;
+			padding-block: 20px max(40px, calc(var(--app-viewport-height, var(--app-height)) * 0.12));
 		}
 		.welcome-group {
-			min-height: min-content;
-			flex: none;
-			margin-block: auto;
-			padding: 20px 4px 48px;
-			gap: 18px;
-		}
-		.welcome-group > img {
-			width: 52px;
-			height: 52px;
+			gap: 14px;
+			margin-bottom: 24px;
 		}
 		.welcome-title {
-			max-inline-size: min(18ch, 18rem, 100%);
+			max-inline-size: 22ch;
 			font-size: clamp(1.625rem, 1.15rem + 2.4vw, 1.875rem);
-			line-height: 1.3;
-			letter-spacing: -0.025em;
+		}
+		.message-list {
+			padding-top: 16px;
+		}
+		.message-column.own {
+			max-width: 90%;
+		}
+		.own .message-bubble {
+			padding-inline: 16px;
+		}
+
+		.welcome-workspace:focus-within .composer-region {
+			padding-block: 12px;
+		}
+		:global(html[data-keyboard]) .welcome-workspace .welcome-group {
+			display: none;
+		}
+		:global(html[data-keyboard]) .welcome-workspace .composer-region {
+			margin-block: auto 0;
+			padding-block: 0;
 		}
 	}
-	@media (max-width: 767px) and (max-height: 500px), (max-height: 500px) and (pointer: coarse) {
+	@media (max-height: 500px) {
+		.welcome-workspace {
+			justify-content: flex-end;
+			padding-bottom: 0;
+		}
+		.welcome-workspace .composer-region {
+			padding-block: 8px;
+		}
 		.welcome-group {
-			padding-block: 8px 16px;
-			gap: 12px;
+			gap: 8px;
+			margin-bottom: 16px;
 		}
 		.welcome-group > img {
-			width: 44px;
-			height: 44px;
+			display: none;
 		}
 		.welcome-title {
 			font-size: 1.5rem;
@@ -1124,45 +1331,6 @@
 				opacity: 1;
 				transform: none;
 			}
-		}
-	}
-
-	.message-column {
-		min-width: 0;
-		max-width: 90%;
-	}
-	.message-bubble {
-		border: 0;
-		box-shadow: none;
-	}
-	.message-bubble :global(.markdown > :first-child) {
-		margin-block-start: 0;
-	}
-	.message-bubble :global(.markdown > :last-child) {
-		margin-block-end: 0;
-	}
-	/* The scroll region can receive native Chrome scroll-container focus. Its
-       mouse focus isn't a message selection; actual controls keep their rings. */
-	.chat-scroll:focus:not(:focus-visible) {
-		outline: none;
-	}
-	@media (min-width: 768px) {
-		.message-column {
-			max-width: 85%;
-		}
-	}
-
-	.thinking {
-		animation: pulse 1.4s ease-in-out infinite;
-	}
-	@keyframes pulse {
-		50% {
-			opacity: 0.35;
-		}
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.thinking {
-			animation: none;
 		}
 	}
 </style>

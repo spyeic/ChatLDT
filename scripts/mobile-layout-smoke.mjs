@@ -153,16 +153,15 @@ try {
 				assert.ok(info.composer >= 80 && info.composer <= 110, JSON.stringify(info));
 				assert.ok(info.font >= 26 && info.font <= 32);
 				assert.equal(info.align, 'center');
-				if (locale === 'en-US')
-					assert.ok(
-						await page
-							.locator('h1')
-							.evaluate(
-								(e) =>
-									e.getBoundingClientRect().height > parseFloat(getComputedStyle(e).fontSize) * 2.4
-							),
-						'English welcome forms two balanced lines'
-					);
+
+				const welcome = await page.locator('.welcome-group').boundingBox();
+				const editor = await page.locator('.composer-box').boundingBox();
+				assert.ok(
+					editor.y - welcome.y - welcome.height >= 23 &&
+						editor.y - welcome.y - welcome.height <= 33,
+					'welcome and editor stay together'
+				);
+				assert.ok(editor.y + editor.height <= 844, 'welcome editor is visible');
 				assert.ok(info.centerDelta < 1);
 				assert.ok(info.inputFont >= 16);
 				assert.ok(info.buttons.every((b) => b.w >= 44 && b.h >= 44));
@@ -172,6 +171,56 @@ try {
 				await page.screenshot({
 					path: join(artifacts, `welcome-${width}-${locale}-${scheme}.png`)
 				});
+				if (width === 390 && locale === 'en-US' && scheme === 'dark') {
+					await page.locator('#chat-input').fill('Welcome keyboard draft. '.repeat(100));
+					await page
+						.locator('input[type=file]')
+						.first()
+						.setInputFiles([
+							{ name: 'welcome-one.png', mimeType: 'image/png', buffer: png },
+							{ name: 'welcome-two.png', mimeType: 'image/png', buffer: png }
+						]);
+					await page.locator('#chat-input').focus();
+					await page.evaluate(() => {
+						window.__welcomeEditor = document.querySelector('#chat-input');
+						__viewport.height = 340;
+						__viewport.offsetTop = 80;
+						__viewport.dispatchEvent(new Event('resize'));
+					});
+					await until(
+						async () => await page.locator('html').evaluate((e) => e.hasAttribute('data-keyboard')),
+						'welcome keyboard detected'
+					);
+					const box = await page.locator('.composer-box').boundingBox();
+					assert.ok(
+						box.y >= 136 && box.y + box.height <= 420,
+						'long draft and attachments stay inside keyboard viewport'
+					);
+					assert.equal(await page.locator('.image-drafts img').count(), 2);
+					assert.ok(
+						await page.evaluate(
+							() => window.__welcomeEditor === document.querySelector('#chat-input')
+						)
+					);
+					await page.screenshot({ path: join(artifacts, 'welcome-keyboard-390.png') });
+					await page.locator('#chat-input').fill('');
+					await page.locator('.image-remove').first().click();
+					await page.locator('.image-remove').first().click();
+					await page.locator('#chat-input').evaluate((e) => e.blur());
+					await page.evaluate(() => {
+						__viewport.height = 844;
+						__viewport.offsetTop = 0;
+						__viewport.dispatchEvent(new Event('resize'));
+					});
+					await until(
+						async () =>
+							(await page.locator('h1').isVisible()) &&
+							(await page
+								.locator('.app-shell')
+								.evaluate((e) => e.getBoundingClientRect().height === 844)),
+						'welcome returns after keyboard'
+					);
+				}
 				const toggle = page.getByRole('button', {
 					name: locale === 'en-US' ? 'Toggle sidebar' : '切换侧边栏',
 					exact: true
@@ -231,6 +280,8 @@ try {
 				await api(context, '/profile', 'PATCH', { name: 'E', language: locale, theme: scheme });
 				await page.goto(base + '/c/' + question.id);
 				await page.locator('main article').first().waitFor();
+				await page.waitForLoadState('networkidle');
+				await page.locator('main').evaluate((e) => (e.scrollTop = 0));
 				await page.locator('main article img').first().waitFor();
 				assert.equal(await page.locator('main article img').count(), 2);
 				assert.equal(
@@ -443,7 +494,7 @@ try {
 		'safe bottom counted once'
 	);
 	const safeBox = await safePage.locator('.composer-box').boundingBox();
-	assert.equal(Math.round(safeBox.y + safeBox.height), 810);
+	assert.ok(safeBox.y + safeBox.height <= 810, 'centered welcome composer respects safe bottom');
 	assert.equal(Math.round((await safePage.locator('.chat-header').boundingBox()).y), 47);
 	await safePage.screenshot({ path: join(artifacts, 'safe-area-390.png') });
 	await safePage.setViewportSize({ width: 844, height: 390 });

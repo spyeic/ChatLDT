@@ -25,6 +25,7 @@ export function watchMobileViewport() {
 			}
 			const focused = document.activeElement?.matches('textarea, input, [contenteditable="true"]');
 			const keyboard = focused && geometry && root.clientHeight - geometry.height > 150;
+			root.toggleAttribute('data-keyboard', !!keyboard);
 			root.style.setProperty(
 				'--app-safe-bottom',
 				keyboard ? '0px' : 'env(safe-area-inset-bottom, 0px)'
@@ -40,6 +41,7 @@ export function watchMobileViewport() {
 	update();
 	return () => {
 		cancelAnimationFrame(frame);
+		root.removeAttribute('data-keyboard');
 		viewport?.removeEventListener('resize', update);
 		viewport?.removeEventListener('scroll', update);
 		window.removeEventListener('resize', update);

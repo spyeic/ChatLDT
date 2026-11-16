@@ -117,3 +117,5 @@ git remote add upstream https://github.com/open-webui/open-webui.git
 本次界面修正、交互验证与前后截图见 [UI 修正记录](docs/CHATLDT_UI_POLISH.md)。
 
 手机布局、浏览器边界、实测截图与录屏见 [手机修正记录](docs/CHATLDT_MOBILE_LAYOUT.md)。
+
+本轮欢迎页、消息排版、输入框与侧边栏整体优化及同状态前后截图见 [对话界面优化验收](docs/CHATLDT_CHATGPT_STYLE.md)。

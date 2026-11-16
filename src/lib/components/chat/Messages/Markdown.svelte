@@ -84,6 +84,38 @@
 </div>
 
 <style>
+	.markdown {
+		font-size: 16px;
+		line-height: 1.7;
+		overflow-wrap: anywhere;
+	}
+	.markdown :global(p),
+	.markdown :global(ul),
+	.markdown :global(ol),
+	.markdown :global(blockquote) {
+		margin-block: 0.85em;
+	}
+	.markdown :global(h1),
+	.markdown :global(h2),
+	.markdown :global(h3),
+	.markdown :global(h4) {
+		margin-block: 1.4em 0.65em;
+		line-height: 1.35;
+		font-weight: 600;
+	}
+	.markdown :global(li) {
+		margin-block: 0.25em;
+	}
+	.markdown :global(pre) {
+		max-width: 100%;
+		font-size: 14px;
+		line-height: 1.6;
+	}
+	.markdown :global(table) {
+		max-width: 100%;
+		white-space: nowrap;
+	}
+
 	.markdown :global(.code-block) {
 		position: relative;
 		max-width: 100%;
